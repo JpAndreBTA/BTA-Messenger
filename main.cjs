@@ -90,6 +90,14 @@ function configureUpdateInstall() {
   });
 }
 
+function configureCallWindowFullscreen() {
+  ipcMain.handle("call-window:set-fullscreen", (event, enabled) => {
+    if (!mainWindow || mainWindow.isDestroyed() || event.sender !== mainWindow.webContents) return false;
+    mainWindow.setFullScreen(Boolean(enabled));
+    return true;
+  });
+}
+
 function parsedUrl(value) {
   try {
     return new URL(value);
@@ -256,6 +264,16 @@ function createMainWindow() {
       mainWindow.webContents.send("app-update:status", updateStatus);
     }
   });
+  mainWindow.on("enter-full-screen", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("call-window:fullscreen-changed", true);
+    }
+  });
+  mainWindow.on("leave-full-screen", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("call-window:fullscreen-changed", false);
+    }
+  });
   // Keep the desktop client visually and behaviorally identical to the web
   // Messenger. Authentication, themes, buttons and synchronization all come
   // from the same official application route.
@@ -269,6 +287,7 @@ app.whenReady().then(() => {
   configurePermissions();
   configureDisplayCapture();
   configureUpdateInstall();
+  configureCallWindowFullscreen();
   app.on("web-contents-created", (_event, contents) => configureNavigation(contents));
   createMainWindow();
   configureAutoUpdates();

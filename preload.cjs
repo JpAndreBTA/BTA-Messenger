@@ -15,6 +15,18 @@ const update = Object.freeze({
   },
 });
 
+const callWindow = Object.freeze({
+  setFullscreen(enabled) {
+    return ipcRenderer.invoke("call-window:set-fullscreen", Boolean(enabled));
+  },
+  onFullscreenChange(callback) {
+    if (typeof callback !== "function") return () => {};
+    const handler = (_event, enabled) => callback(Boolean(enabled));
+    ipcRenderer.on("call-window:fullscreen-changed", handler);
+    return () => ipcRenderer.removeListener("call-window:fullscreen-changed", handler);
+  },
+});
+
 contextBridge.exposeInMainWorld("btaDesktop", Object.freeze({
   isDesktop: true,
   platform: process.platform,
@@ -23,4 +35,5 @@ contextBridge.exposeInMainWorld("btaDesktop", Object.freeze({
   separateSystemAudio: process.platform === "win32",
   localLoopbackMuted: process.platform === "win32",
   update,
+  callWindow,
 }));
