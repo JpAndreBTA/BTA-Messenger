@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Escolha o que compartilhar</title>
+    <style>
+      :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background: #0c0f14; color: #f7f8fa; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 20% 0%, #252d3c, #0c0f14 55%); }
+      main { width: min(980px, 100%); margin: 0 auto; padding: 32px; }
+      header { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+      h1 { margin: 0; font-size: 24px; letter-spacing: -0.02em; }
+      p { margin: 6px 0 0; color: #9aa5b4; font-size: 13px; }
+      .source-tabs { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 18px; border: 1px solid #303948; border-radius: 12px; background: rgba(12, 15, 20, .7); }
+      .source-tab { padding: 9px 14px; border: 0; border-radius: 8px; background: transparent; color: #9aa5b4; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+      .source-tab:hover, .source-tab:focus-visible { transform: none; background: #202938; color: #f7f8fa; outline: none; }
+      .source-tab[aria-selected="true"] { background: #ff3d50; color: #fff; }
+      .sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+      button { border: 1px solid #3a4454; border-radius: 12px; background: #151b24; color: inherit; cursor: pointer; text-align: left; overflow: hidden; padding: 0; transition: border-color .15s, transform .15s, background .15s; }
+      button:hover, button:focus-visible { border-color: #ff3d50; background: #1c232f; transform: translateY(-2px); outline: none; }
+      img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #202837; }
+      .label { display: block; padding: 12px 14px; font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      footer { display: flex; justify-content: flex-end; margin-top: 24px; }
+      .cancel { padding: 10px 16px; background: transparent; border-color: #3a4454; text-align: center; }
+      .empty { grid-column: 1 / -1; padding: 48px 12px; color: #9aa5b4; text-align: center; }
+      @media (max-width: 680px) { main { padding: 20px; } .sources { grid-template-columns: 1fr; } header { align-items: start; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>Escolha o que compartilhar</h1>
+          <p>A tela ou janela selecionada será enviada aos participantes.</p>
+        </div>
+      </header>
+      <nav class="source-tabs" aria-label="Tipo de fonte">
+        <button class="source-tab" type="button" data-filter="screen" role="tab" aria-selected="true">Tela</button>
+        <button class="source-tab" type="button" data-filter="window" role="tab" aria-selected="false">Janela específica</button>
+      </nav>
+      <section class="sources" aria-live="polite"></section>
+      <footer><button class="cancel" type="button">Cancelar</button></footer>
+    </main>
+    <script>
+      const container = document.querySelector(".sources");
+      const cancel = document.querySelector(".cancel");
+      const picker = window.capturePicker;
+      const tabs = Array.from(document.querySelectorAll(".source-tab"));
+      let allSources = [];
+      let activeFilter = "screen";
+      cancel.addEventListener("click", () => picker.cancel());
+      const renderSources = () => {
+        container.replaceChildren();
+        const sources = allSources.filter((source) => source.kind === activeFilter);
+        if (!sources.length) {
+          const empty = document.createElement("p");
+          empty.className = "empty";
+          empty.textContent = activeFilter === "screen" ? "Nenhuma tela disponível." : "Nenhuma janela disponível.";
+          container.append(empty);
+          return;
+        }
+        for (const source of sources) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.kind = source.kind;
+          button.addEventListener("click", () => picker.select(source.id));
+          const image = document.createElement("img");
+          image.alt = "Prévia de " + source.name;
+          image.src = source.thumbnail || source.appIcon || "";
+          const label = document.createElement("span");
+          label.className = "label";
+          label.textContent = source.name || "Janela sem nome";
+          button.append(image, label);
+          container.append(button);
+        }
+      };
+      tabs.forEach((tab) => tab.addEventListener("click", () => {
+        activeFilter = tab.dataset.filter === "window" ? "window" : "screen";
+        tabs.forEach((item) => item.setAttribute("aria-selected", String(item === tab)));
+        renderSources();
+      }));
+      picker.onSources((sources) => {
+        allSources = sources.map((source) => ({ ...source, kind: source.kind === "window" ? "window" : "screen" }));
+        renderSources();
+      });
+    </script>
+  </body>
+</html>

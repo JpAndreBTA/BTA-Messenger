@@ -1,0 +1,86 @@
+{
+  "name": "bta-messenger-desktop",
+  "version": "0.1.0",
+  "description": "Companion desktop app for BTA Messenger with native display capture.",
+  "main": "main.cjs",
+  "license": "MIT",
+  "author": "BTA Studio",
+  "scripts": {
+    "start": "electron .",
+    "check": "node --check main.cjs && node --check preload.cjs && node --check picker-preload.cjs",
+    "dist": "npm run dist:win",
+    "dist:win": "electron-builder --win nsis --x64 --publish never",
+    "dist:linux": "electron-builder --linux AppImage --x64 --publish never",
+    "dist:mac": "electron-builder --mac dmg --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^44.4.1",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.btastudio.messenger",
+    "publish": {
+      "provider": "github",
+      "owner": "JpAndreBTA",
+      "repo": "BTA-Messenger",
+      "releaseType": "release"
+    },
+    "productName": "BTA Messenger",
+    "asar": true,
+    "compression": "maximum",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "picker-preload.cjs",
+      "capture-picker.html",
+      "README.md",
+      "LICENSE",
+      "SECURITY.md"
+    ],
+    "artifactName": "BTA-Messenger-Desktop-${version}-${os}-${arch}.${ext}",
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "BTA Messenger",
+      "menuCategory": "BTA Studio",
+      "runAfterFinish": true,
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "deleteAppDataOnUninstall": false
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "target": [
+        "AppImage"
+      ],
+      "category": "Network"
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.social-networking"
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}
