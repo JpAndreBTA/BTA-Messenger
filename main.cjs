@@ -90,12 +90,16 @@ function configureUpdateInstall() {
   });
 }
 
-function configureCallWindowFullscreen() {
-  ipcMain.handle("call-window:set-fullscreen", (event, enabled) => {
+function configureWindowFullscreen() {
+  const setWindowFullscreen = (event, enabled) => {
     if (!mainWindow || mainWindow.isDestroyed() || event.sender !== mainWindow.webContents) return false;
     mainWindow.setFullScreen(Boolean(enabled));
     return true;
-  });
+  };
+  // Keep the original call channel for already-installed 0.1.0 clients while
+  // exposing one generic channel for games and future immersive surfaces.
+  ipcMain.handle("window:set-fullscreen", setWindowFullscreen);
+  ipcMain.handle("call-window:set-fullscreen", setWindowFullscreen);
 }
 
 function parsedUrl(value) {
@@ -266,11 +270,13 @@ function createMainWindow() {
   });
   mainWindow.on("enter-full-screen", () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("window:fullscreen-changed", true);
       mainWindow.webContents.send("call-window:fullscreen-changed", true);
     }
   });
   mainWindow.on("leave-full-screen", () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("window:fullscreen-changed", false);
       mainWindow.webContents.send("call-window:fullscreen-changed", false);
     }
   });
@@ -287,7 +293,7 @@ app.whenReady().then(() => {
   configurePermissions();
   configureDisplayCapture();
   configureUpdateInstall();
-  configureCallWindowFullscreen();
+  configureWindowFullscreen();
   app.on("web-contents-created", (_event, contents) => configureNavigation(contents));
   createMainWindow();
   configureAutoUpdates();
