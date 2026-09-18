@@ -1,6 +1,6 @@
 {
   "name": "bta-messenger-desktop",
-  "version": "0.1.0",
+  "version": "0.1.6",
   "description": "Companion desktop app for BTA Messenger with native display capture.",
   "main": "main.cjs",
   "license": "MIT",
